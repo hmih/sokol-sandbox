@@ -1,42 +1,24 @@
 @vs vs
-struct vin
-{
-    float4 color [[user(locn0)]];
-    float4 gl_Position [[position]];
-};
+in vec3 pos0;
+in vec4 color0;
 
-struct vout
-{
-    float4 position [[attribute(0)]];
-    float4 color [[attribute(1)]];
-};
+out vec4 color1;
 
-vertex vout main(vin in [[stage_in]])
+void main()
 {
-    vout out = {};
-    out.gl_Position = in.position;
-    out.color = in.color;
-    return out;
+    gl_Position = vec4(pos0.x, pos0.y, pos0.z, 1.0);
+    color1 = color0;
 }
 @end
 
 @fs fs
-struct vin
-{
-    float4 frag_color [[color(0)]];
-};
+in vec4 color1;
+out vec4 color2;
 
-struct vout
+void main()
 {
-    float4 color [[user(locn0)]];
-};
-
-fragment vout main(vin in [[stage_in]])
-{
-    vout out = {};
-    out.frag_color = in.color;
-    return out;
+    color2 = color1;
 }
 @end
 
-#pragma sokol @program texcube vs fs
+#pragma sokol @program simple vs fs
