@@ -1,6 +1,3 @@
-//------------------------------------------------------------------------------
-//  Renders a square.
-//------------------------------------------------------------------------------
 mod shader;
 
 use std::ptr::addr_of_mut;
@@ -32,12 +29,26 @@ extern "C" fn init() {
     // triangle vertex buffer
     #[rustfmt::skip]
     const VERTICES: &[f32] = &[
-        -0.5, -0.5, 0.0,
-        0.5, -0.5, 0.0,
-        0.0,  0.5, 0.0, 
+        -0.5, -0.5, 0.0, // bot left
+        -0.5,  0.5, 0.0, // top left
+        0.5,  0.5, 0.0,  // top right
+        0.5, -0.5, 0.0,  // bot right
     ];
     state.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(VERTICES),
+        _type: sg::BufferType::Vertexbuffer,
+        ..Default::default()
+    });
+
+    #[rustfmt::skip]
+    const INDICES: &[u16] = &[
+        0, 1, 3,
+        1, 2, 3
+    ];
+
+    state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
+        data: sg::slice_as_range(INDICES),
+        _type: sg::BufferType::Indexbuffer,
         ..Default::default()
     });
 
@@ -46,6 +57,7 @@ extern "C" fn init() {
     let shader = &shader::simple_shader_desc(be);
     state.pip = sg::make_pipeline(&sg::PipelineDesc {
         shader: sg::make_shader(shader),
+        index_type: sg::IndexType::Uint16,
         layout: {
             let mut layout = sg::VertexLayoutState::new();
             layout.attrs[shader::ATTR_VS_POS0].format = sg::VertexFormat::Float3;
@@ -94,7 +106,7 @@ fn main() {
         width: 800,
         height: 600,
         sample_count: 4,
-        window_title: c"cube".as_ptr(),
+        window_title: c"simple".as_ptr(),
         logger: sapp::Logger {
             func: Some(sokol::log::slog_func),
             ..Default::default()
