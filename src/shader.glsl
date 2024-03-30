@@ -1,29 +1,41 @@
-@header use crate::math as m
-
-@ctype mat4 m::Mat4
-
 @vs vs
-uniform vs_params {
-    mat4 mvp;
+struct vin
+{
+    float4 color [[user(locn0)]];
+    float4 gl_Position [[position]];
 };
 
-in vec4 position;
-in vec4 color0;
+struct vout
+{
+    float4 position [[attribute(0)]];
+    float4 color [[attribute(1)]];
+};
 
-out vec4 color;
-
-void main() {
-    gl_Position = mvp * position;
-    color = color0;
+vertex vout main(vin in [[stage_in]])
+{
+    vout out = {};
+    out.gl_Position = in.position;
+    out.color = in.color;
+    return out;
 }
 @end
 
 @fs fs
-in vec4 color;
-out vec4 frag_color;
+struct vin
+{
+    float4 frag_color [[color(0)]];
+};
 
-void main() {
-    frag_color = color;
+struct vout
+{
+    float4 color [[user(locn0)]];
+};
+
+fragment vout main(vin in [[stage_in]])
+{
+    vout out = {};
+    out.frag_color = in.color;
+    return out;
 }
 @end
 
