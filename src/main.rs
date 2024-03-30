@@ -29,10 +29,11 @@ extern "C" fn init() {
     // triangle vertex buffer
     #[rustfmt::skip]
     const VERTICES: &[f32] = &[
-        -0.5, -0.5, 0.0, // bot left
-        -0.5,  0.5, 0.0, // top left
-        0.5,  0.5, 0.0,  // top right
-        0.5, -0.5, 0.0,  // bot right
+        // position      color
+        -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 1.0, // bot left
+        -0.5,  0.5, 0.0, 0.0, 1.0, 0.0, 1.0, // top left
+         0.5,  0.5, 0.0, 0.0, 0.0, 1.0, 1.0, // top right
+         0.5, -0.5, 0.0, 1.0, 0.0, 1.0, 1.0, // bot right
     ];
     state.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(VERTICES),
@@ -61,6 +62,7 @@ extern "C" fn init() {
         layout: {
             let mut layout = sg::VertexLayoutState::new();
             layout.attrs[shader::ATTR_VS_POS0].format = sg::VertexFormat::Float3;
+            layout.attrs[shader::ATTR_VS_COL0].format = sg::VertexFormat::Float4;
             layout
         },
         ..Default::default()
