@@ -29,7 +29,7 @@ extern "C" fn init() {
         ..Default::default()
     });
 
-    // cube vertex buffer
+    // triangle vertex buffer
     #[rustfmt::skip]
     const VERTICES: &[f32] = &[
         -0.5, -0.5, 0.0,
@@ -42,11 +42,13 @@ extern "C" fn init() {
     });
 
     // shader and pipeline object
+    let be = sg::query_backend();
+    let shader = &shader::simple_shader_desc(be);
     state.pip = sg::make_pipeline(&sg::PipelineDesc {
-        shader: sg::make_shader(&shader::square_shader_desc(sg::query_backend())),
+        shader: sg::make_shader(shader),
         layout: {
             let mut layout = sg::VertexLayoutState::new();
-            layout.attrs[shader::ATTR_VS_POSITION].format = sg::VertexFormat::Float3;
+            layout.attrs[shader::ATTR_VS_POS0].format = sg::VertexFormat::Float3;
             layout
         },
         ..Default::default()
@@ -60,10 +62,10 @@ extern "C" fn frame() {
     pass_action.colors[0] = sg::ColorAttachmentAction {
         load_action: sg::LoadAction::Clear,
         clear_value: sg::Color {
-            r: 0.25,
-            g: 0.5,
-            b: 0.75,
-            a: 1.0,
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.0,
         },
         ..Default::default()
     };
