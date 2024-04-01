@@ -8,11 +8,16 @@ let
   }) {};
 in pkgs.mkShellNoCC {
   buildInputs = with pkgs; [
+    # build
     pkg-config
     ninja
     meson
-    raylib
     clang
+
+    # deps
+    raylib
+
+    # dev
     lldb
 
     # misc
