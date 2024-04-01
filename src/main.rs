@@ -29,7 +29,7 @@ struct Entities {
 
 static mut PLAYERS: Entities = Entities {
     x: [-0.15, 0.15],
-    y: [0.05, -0.95],
+    y: [0.05, -0.80],
     c: [0x00FF00FF, 0xFF0000FF],
 };
 
@@ -51,7 +51,7 @@ fn to_indices() -> Vec<u32> {
         // top right
         // bot left
         // bot right
-        let tl = (i * ENTITIES_SIZE) as u32;
+        let tl = (i * 4) as u32;
         let ixs = [tl, tl + 1, tl + 2, tl + 1, tl + 2, tl + 3];
         res.extend(ixs);
     }
@@ -59,7 +59,7 @@ fn to_indices() -> Vec<u32> {
     res
 }
 
-fn to_vertices(es: &Entities) -> Vec<Vec<Vertex>> {
+fn to_vertices(es: &Entities) -> Vec<Vertex> {
     let mut res = Vec::with_capacity(ENTITIES_SIZE);
 
     for i in 0..ENTITIES_SIZE {
@@ -68,13 +68,13 @@ fn to_vertices(es: &Entities) -> Vec<Vec<Vertex>> {
         // bot left
         // bot right
         #[rustfmt::skip]
-        let v = vec![
+        let v = [
             Vertex{ x: es.x[i],             y: es.y[i],               c: es.c[i] },
             Vertex{ x: es.x[i] + BOX_WIDTH, y: es.y[i],               c: es.c[i] },
             Vertex{ x: es.x[i],             y: es.y[i] - BOX_HEIGHT,  c: es.c[i] },
             Vertex{ x: es.x[i] + BOX_WIDTH, y: es.y[i] - BOX_HEIGHT,  c: es.c[i] },
         ];
-        res.push(v);
+        res.extend(v);
     }
 
     res
@@ -94,16 +94,15 @@ extern "C" fn init() {
     });
 
     let vertices = to_vertices(players);
-
-    for (ix, vs) in vertices.iter().enumerate() {
-        state.bind.vertex_buffers[ix] = sg::make_buffer(&sg::BufferDesc {
-            data: sg::slice_as_range(vs.as_slice()),
-            _type: sg::BufferType::Vertexbuffer,
-            ..Default::default()
-        });
-    }
+    dbg!(&vertices);
+    state.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
+        data: sg::slice_as_range(vertices.as_slice()),
+        _type: sg::BufferType::Vertexbuffer,
+        ..Default::default()
+    });
 
     let indices = to_indices();
+    dbg!(&indices);
     state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(indices.as_slice()),
         _type: sg::BufferType::Indexbuffer,
@@ -116,11 +115,14 @@ extern "C" fn init() {
     state.pip = sg::make_pipeline(&sg::PipelineDesc {
         shader: sg::make_shader(shader),
         index_type: sg::IndexType::Uint32,
-        layout: {
-            let mut layout = sg::VertexLayoutState::new();
-            layout.attrs[shader::ATTR_VS_POS0].format = sg::VertexFormat::Float3;
-            layout.attrs[shader::ATTR_VS_COL0].format = sg::VertexFormat::Ubyte4n;
-            layout
+        layout: sg::VertexLayoutState {
+            attrs: {
+                let mut attrs = [sg::VertexAttrState::new(); sg::MAX_VERTEX_ATTRIBUTES];
+                attrs[shader::ATTR_VS_POS0].format = sg::VertexFormat::Float2;
+                attrs[shader::ATTR_VS_COL0].format = sg::VertexFormat::Ubyte4n;
+                attrs
+            },
+            ..Default::default()
         },
         ..Default::default()
     });
