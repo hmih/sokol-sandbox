@@ -68,7 +68,7 @@ fn to_vertices(es: &Entities) -> Vec<Vertex> {
         // bot left
         // bot right
         #[rustfmt::skip]
-        let v = [
+        let v = vec![
             Vertex{ x: es.x[i],             y: es.y[i],               c: es.c[i] },
             Vertex{ x: es.x[i] + BOX_WIDTH, y: es.y[i],               c: es.c[i] },
             Vertex{ x: es.x[i],             y: es.y[i] - BOX_HEIGHT,  c: es.c[i] },
@@ -94,18 +94,18 @@ extern "C" fn init() {
     });
 
     let vertices = to_vertices(players);
-    dbg!(&vertices);
     state.bind.vertex_buffers[0] = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(vertices.as_slice()),
         _type: sg::BufferType::Vertexbuffer,
+        label: c"squares-vs".as_ptr(),
         ..Default::default()
     });
 
     let indices = to_indices();
-    dbg!(&indices);
     state.bind.index_buffer = sg::make_buffer(&sg::BufferDesc {
         data: sg::slice_as_range(indices.as_slice()),
         _type: sg::BufferType::Indexbuffer,
+        label: c"squares-ixs".as_ptr(),
         ..Default::default()
     });
 
