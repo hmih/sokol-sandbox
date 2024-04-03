@@ -4,7 +4,7 @@ let
     url = "https://github.com/nixos/nixpkgs/";
     ref = "refs/heads/master";
     # pinned on 01.04.2024
-    rev = "07512215ac3313f69817029a857a036dc0a5e3a3";
+    rev = "8a22284f51fcd7771ee65ba124175bf9b90505ad";
   }) {};
 in pkgs.mkShellNoCC {
   buildInputs = with pkgs; [

@@ -12,22 +12,25 @@ const int COMPUTER = 1;
 
 const int BAR_WIDTH = 90;
 const int BAR_HEIGHT = 15;
-const int MOVE_SPEED = 10;
-const int BAR_LEFT_BOUND = 0;
-const int BAR_RIGHT_BOUND = SCREEN_WIDTH - BAR_WIDTH;
-
-const int HOVER_OFFSET = 15;
-const int FLOOR_BOUND = HOVER_OFFSET + BAR_HEIGHT;
-const int CEIL_BOUND = SCREEN_HEIGHT - FLOOR_BOUND;
+const int BAR_MOVE_SPEED = 10;
+const int BAR_HOVER_OFFSET = 15;
+const int BAR_BOUND_LEFT = 0;
+const int BAR_BOUND_RIGHT = SCREEN_WIDTH - BAR_WIDTH;
+const int BAR_BOUND_TOP = BAR_HOVER_OFFSET + BAR_HEIGHT; // 0, 0 is top left
+const int BAR_BOUND_BOT = SCREEN_HEIGHT - BAR_BOUND_TOP;
+const float BAR_INITIAL_X = (float)SCREEN_WIDTH / 2 - (float)BAR_WIDTH / 2;
 
 const int BALL_RADIUS = 10;
-const int BALL_SPEED = 85;
-const int BALL_FLOOR_BOUND = FLOOR_BOUND + BALL_RADIUS;
-const int BALL_CEIL_BOUND = CEIL_BOUND - BALL_RADIUS;
-const int BALL_LEFT_SIDE_BOUND = BALL_RADIUS;
-const int BALL_RIGHT_SIDE_BOUND = SCREEN_WIDTH - BALL_RADIUS;
+const int BALL_SPEED = 5;
+const int BALL_BOUND_TOP = BAR_BOUND_TOP + BALL_RADIUS;
+const int BALL_BOUND_BOT = BAR_BOUND_BOT - BALL_RADIUS;
+const int BALL_BOUND_LEFT = BALL_RADIUS;
+const int BALL_BOUND_RIGHT = SCREEN_WIDTH - BALL_RADIUS;
 const float BALL_INITIAL_X = (float)SCREEN_WIDTH / 2;
 const float BALL_INITIAL_Y = (float)SCREEN_HEIGHT / 2;
+
+const Vector2 REFL_X = {.x = -1, .y = 1};
+const Vector2 REFL_Y = {.x = 1, .y = -1};
 
 int main(void);
 
@@ -42,77 +45,75 @@ int main(void) {
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
-  int initial_y;
-  int initial_x;
-  Vector2 move_computer;
-  Vector2 move_player;
-  Vector2 ball;
-  Vector2 direction;
-  Vector2 computer;
-  Vector2 player;
+  int init_dir_x_sign;
+  int init_dir_y_sign;
+  int init_dir_x;
+  const int init_dir_y = 1;
+  Vector2 ball_vel;
+  Vector2 ball_pos;
+  Vector2 com_vel;
+  Vector2 com_pos;
+  Vector2 plr_vel;
+  Vector2 plr_pos;
 
 init:
-  initial_y = GetRandomValue(-1, 1);
-  initial_x = GetRandomValue(-2, 2);
-  move_computer = (Vector2){.x = ((float)MOVE_SPEED) / 2, .y = 0};
-  move_player = (Vector2){.x = MOVE_SPEED, .y = 0};
-  ball = (Vector2){BALL_INITIAL_X, BALL_INITIAL_Y};
-  direction = (Vector2){.y = initial_y, .x = initial_x};
-  computer = (Vector2){30, HOVER_OFFSET};
-  player = (Vector2){30, CEIL_BOUND};
+  init_dir_x_sign = GetRandomValue(1, 2) % 2 == 0;
+  init_dir_y_sign = GetRandomValue(1, 2) % 2 == 0;
+  init_dir_x = GetRandomValue(0, 1);
+  ball_pos = (Vector2){BALL_INITIAL_X, BALL_INITIAL_Y};
+  ball_vel = (Vector2){.x = init_dir_x_sign ? init_dir_x : -init_dir_x,
+                       .y = init_dir_y_sign ? init_dir_y : -init_dir_y};
+  com_vel = (Vector2){.x = ((float)BAR_MOVE_SPEED) / 2, .y = 0};
+  com_pos = (Vector2){BAR_INITIAL_X, BAR_HOVER_OFFSET};
+  plr_vel = (Vector2){.x = BAR_MOVE_SPEED, .y = 0};
+  plr_pos = (Vector2){BAR_INITIAL_X, BAR_BOUND_BOT};
+
+  // set initial ball velocity
+  ball_vel = Vector2Scale(ball_vel, BALL_SPEED);
 
   while (!WindowShouldClose()) {
 
-    ball = Vector2Add(ball, direction);
-    ball = (Vector2){
-        .x = Clamp(ball.x, BALL_LEFT_SIDE_BOUND, BALL_RIGHT_SIDE_BOUND),
-        .y = Clamp(ball.y, BALL_FLOOR_BOUND, BALL_CEIL_BOUND),
-    };
-
-    if (ball.x < (computer.x + (float)BAR_WIDTH / 2)) {
-      computer = Vector2Add(computer, Vector2Negate(move_computer));
-    } else if (ball.x > (computer.x - (float)BAR_WIDTH / 2)) {
-      computer = Vector2Add(computer, move_computer);
+    if (ball_pos.x < (com_pos.x + (float)BAR_WIDTH / 2)) {
+      com_pos = Vector2Add(com_pos, Vector2Negate(com_vel));
+    } else if (ball_pos.x > (com_pos.x - (float)BAR_WIDTH / 2)) {
+      com_pos = Vector2Add(com_pos, com_vel);
     }
-    computer.x = Clamp(computer.x, BAR_LEFT_BOUND, BAR_RIGHT_BOUND);
+    com_pos.x = Clamp(com_pos.x, BAR_BOUND_LEFT, BAR_BOUND_RIGHT);
 
     if (IsKeyDown(KEY_D)) {
-      player = Vector2Add(player, Vector2Negate(move_player));
+      plr_pos = Vector2Add(plr_pos, Vector2Negate(plr_vel));
     } else if (IsKeyDown(KEY_F)) {
-      player = Vector2Add(player, move_player);
+      plr_pos = Vector2Add(plr_pos, plr_vel);
     }
-    player.x = Clamp(player.x, BAR_LEFT_BOUND, BAR_RIGHT_BOUND);
+    plr_pos.x = Clamp(plr_pos.x, BAR_BOUND_LEFT, BAR_BOUND_RIGHT);
 
-    if (ball.y == BALL_FLOOR_BOUND) {
-      if (computer.x <= ball.x && (computer.x + BAR_WIDTH) >= ball.x) {
-        printf("hit computer!\n");
-        float a = atan2f(ball.y, ball.x);
-        printf("collision angle: %.3f\n", a);
-        direction = Vector2Rotate(direction, a);
+    if (ball_pos.y == BALL_BOUND_TOP) {
+      if (com_pos.x <= ball_pos.x && (com_pos.x + BAR_WIDTH) >= ball_pos.x) {
+        ball_vel = Vector2Multiply(ball_vel, REFL_Y);
       } else {
         points[PLAYER] += 1;
         goto init;
       }
     }
 
-    if (ball.y == BALL_CEIL_BOUND) {
-      if (player.x <= ball.x && (player.x + BAR_WIDTH) >= ball.x) {
-        printf("hit player!\n");
-        float a = atan2f(ball.y, ball.x);
-        printf("collision angle: %.3f\n", a);
-        direction = Vector2Rotate(direction, a);
+    if (ball_pos.y == BALL_BOUND_BOT) {
+      if (plr_pos.x <= ball_pos.x && (plr_pos.x + BAR_WIDTH) >= ball_pos.x) {
+        ball_vel = Vector2Multiply(ball_vel, REFL_Y);
       } else {
         points[COMPUTER] += 1;
         goto init;
       }
     }
 
-    if (ball.x == BALL_LEFT_SIDE_BOUND || ball.x == BALL_RIGHT_SIDE_BOUND) {
-      printf("hit wall!\n");
-      float a = atan2f(ball.y, ball.x);
-      printf("collision angle: %.3f\n", a);
-      direction = Vector2Rotate(direction, a);
+    if (ball_pos.x == BALL_BOUND_LEFT || ball_pos.x == BALL_BOUND_RIGHT) {
+      ball_vel = Vector2Multiply(ball_vel, REFL_X);
     }
+
+    ball_pos = Vector2Add(ball_pos, ball_vel);
+    ball_pos = (Vector2){
+        .x = Clamp(ball_pos.x, BALL_BOUND_LEFT, BALL_BOUND_RIGHT),
+        .y = Clamp(ball_pos.y, BALL_BOUND_TOP, BALL_BOUND_BOT),
+    };
 
     BeginDrawing();
     ClearBackground(RAYWHITE);
@@ -120,18 +121,18 @@ init:
 
     char score_computer[2];
     snprintf(score_computer, 2, "%d", points[COMPUTER]);
-    DrawText(score_computer, 30, FLOOR_BOUND + 30, 20, BLACK);
+    DrawText(score_computer, 30, BAR_BOUND_TOP + 30, 20, BLACK);
 
     char score_player[2];
     snprintf(score_player, 2, "%d", points[PLAYER]);
-    DrawText(score_player, 30, CEIL_BOUND - 30, 20, BLACK);
+    DrawText(score_player, 30, BAR_BOUND_BOT - 30, 20, BLACK);
 
-    Rectangle rect_player = {player.x, player.y, BAR_WIDTH, BAR_HEIGHT};
+    Rectangle rect_player = {plr_pos.x, plr_pos.y, BAR_WIDTH, BAR_HEIGHT};
     DrawRectangleRec(rect_player, RED);
-    Rectangle rect_computer = {computer.x, computer.y, BAR_WIDTH, BAR_HEIGHT};
+    Rectangle rect_computer = {com_pos.x, com_pos.y, BAR_WIDTH, BAR_HEIGHT};
     DrawRectangleRec(rect_computer, BLUE);
 
-    DrawCircle(ball.x, ball.y, BALL_RADIUS, BLACK);
+    DrawCircle(ball_pos.x, ball_pos.y, BALL_RADIUS, BLACK);
 
     EndMode2D();
     EndDrawing();
