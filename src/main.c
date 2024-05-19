@@ -48,10 +48,10 @@ int main(void) {
   int init_dir_x_sign;
   int init_dir_y_sign;
   int init_dir_x;
+  float com_mid;
   const int init_dir_y = 1;
   Vector2 ball_vel;
   Vector2 ball_pos;
-  Vector2 com_vel;
   Vector2 com_pos;
   Vector2 plr_vel;
   Vector2 plr_pos;
@@ -63,7 +63,6 @@ init:
   ball_pos = (Vector2){BALL_INITIAL_X, BALL_INITIAL_Y};
   ball_vel = (Vector2){.x = init_dir_x_sign ? init_dir_x : -init_dir_x,
                        .y = init_dir_y_sign ? init_dir_y : -init_dir_y};
-  com_vel = (Vector2){.x = ((float)BAR_MOVE_SPEED) / 2, .y = 0};
   com_pos = (Vector2){BAR_INITIAL_X, BAR_HOVER_OFFSET};
   plr_vel = (Vector2){.x = BAR_MOVE_SPEED, .y = 0};
   plr_pos = (Vector2){BAR_INITIAL_X, BAR_BOUND_BOT};
@@ -73,11 +72,8 @@ init:
 
   while (!WindowShouldClose()) {
 
-    if (ball_pos.x < (com_pos.x + (float)BAR_WIDTH / 2)) {
-      com_pos = Vector2Add(com_pos, Vector2Negate(com_vel));
-    } else if (ball_pos.x > (com_pos.x - (float)BAR_WIDTH / 2)) {
-      com_pos = Vector2Add(com_pos, com_vel);
-    }
+    com_mid = com_pos.x - ((BAR_WIDTH / 2.0) / 10.0);
+    com_pos.x = Lerp(com_mid, ball_pos.x, 0.1);
     com_pos.x = Clamp(com_pos.x, BAR_BOUND_LEFT, BAR_BOUND_RIGHT);
 
     if (IsKeyDown(KEY_D)) {
